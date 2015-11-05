@@ -1242,4 +1242,24 @@ describe('dest stream', function() {
     stream.write(file);
     stream.end();
   });
+
+  it('does not get clogged by highWaterMark', function(done) {
+    var srcPath = path.join(__dirname, './fixtures/highwatermark/*.txt');
+    var srcStream = vfs.src(srcPath);
+    var destStream = vfs.dest('./out-fixtures/', {cwd: __dirname});
+
+    var fileCount = 0;
+    var countFiles = through.obj(function(file, enc, cb) {
+      fileCount++;
+
+      cb(null, file);
+    });
+
+    destStream.once('finish', function() {
+      fileCount.should.equal(17);
+      done();
+    });
+
+    srcStream.pipe(countFiles).pipe(destStream);
+  });
 });
